@@ -1,0 +1,47 @@
+# Environment files (contain secrets)
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Datasets (downloaded via: python -m datasets.download_tabarena)
+# Some files exceed GitHub's 100MB limit
+datasets/
+
+# Model checkpoints (downloaded automatically)
+*.pt
+*.bin
+*.safetensors
+
+# Results
+results/**
+!results/**/
+!results/**/.gitkeep
+
+# Jupyter
+.ipynb_checkpoints/
+
+# CatBoost
+catboost_info/
