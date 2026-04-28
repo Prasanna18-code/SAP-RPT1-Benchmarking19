@@ -202,10 +202,3 @@ sap_rpt1_hf:
   bagging: 1              # Lower from 4
 ```
 
-**Docker run says `python: can't open file '/app/code/python'`:**
-Because the Dockerfile sets `ENTRYPOINT ["python"]`, you should not include `python` in your `docker-compose run` commands. 
-✅ **Correct:** `docker-compose run sap-rpt1 -m runners.run_experiment ...`
-❌ **Incorrect:** `docker-compose run sap-rpt1 python -m runners.run_experiment ...`
-
-**FileNotFoundError: Dataset not found in /app/datasets:**
-Make sure you use a dataset that has been downloaded. You can either run the download script `docker-compose run baselines -m datasets.download_tabarena` to fetch all OpenML datasets, or choose an existing dataset file name from your `datasets/` folder.
