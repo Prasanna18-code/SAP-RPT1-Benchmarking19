@@ -30,7 +30,7 @@ git clone <repo-url>
 cd "MINI proj SAP"
 
 # Install everything in one command
-pip install -e ".[models]"
+pip install -e ".[models,baselines]"
 
 # Download datasets (19 datasets from OpenML)
 cd code

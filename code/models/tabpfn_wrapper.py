@@ -75,11 +75,30 @@ class TabPFNWrapper(BaseModelWrapper):
         self._validate_input(X, y)
 
         # Check TabPFN constraints
-        if X.shape[0] > 1000:
-            logger.warning(f"TabPFN works best with <1000 samples, got {X.shape[0]}")
+        if X.shape[0] > 1024:
+            logger.warning(f"TabPFN strictly requires <= 1024 samples to avoid Memory OOM. Subsampling {X.shape[0]} to 1024 samples.")
+            sample_idx = np.random.RandomState(self.random_state).choice(
+                len(X), 1024, replace=False
+            )
+            if isinstance(X, pd.DataFrame):
+                X = X.iloc[sample_idx]
+            else:
+                X = X[sample_idx]
+            
+            if isinstance(y, pd.Series):
+                y = y.iloc[sample_idx]
+            else:
+                y = y[sample_idx]
 
         if X.shape[1] > 100:
-            logger.warning(f"TabPFN works best with <100 features, got {X.shape[1]}")
+            logger.warning(f"TabPFN strictly requires <= 100 features. Truncating {X.shape[1]} to 100 features.")
+            if isinstance(X, pd.DataFrame):
+                X = X.iloc[:, :100]
+            else:
+                X = X[:, :100]
+            self.truncated_features_ = True
+        else:
+            self.truncated_features_ = False
 
         logger.info(f"Fitting TabPFN on {X.shape[0]} samples...")
         start_time = time.time()
@@ -87,13 +106,18 @@ class TabPFNWrapper(BaseModelWrapper):
         try:
             from tabpfn import TabPFNClassifier
 
-            self.model = TabPFNClassifier(
-                device=self.device,
-                N_ensemble_configurations=self.n_ensemble
-            )
+            import torch
+            import tabpfn
+            
+            actual_device = 'cuda' if (self.device == 'auto' and torch.cuda.is_available()) else ('cpu' if self.device == 'auto' else self.device)
+            
+            if hasattr(tabpfn, '__version__') and tabpfn.__version__.startswith('0.1'):
+                self.model = TabPFNClassifier(device=actual_device, N_ensemble_configurations=self.n_ensemble)
+            else:
+                self.model = TabPFNClassifier(device=actual_device)
 
             # Fit model
-            self.model.fit(X, y)
+            self.model.fit(X, y, overwrite_warning=True)
 
             self.is_fitted = True
             self.fit_time = time.time() - start_time
@@ -128,6 +152,12 @@ class TabPFNWrapper(BaseModelWrapper):
 
         self._validate_input(X)
 
+        if getattr(self, 'truncated_features_', False) and X.shape[1] > 100:
+            if isinstance(X, pd.DataFrame):
+                X = X.iloc[:, :100]
+            else:
+                X = X[:, :100]
+
         logger.info(f"Predicting on {X.shape[0]} samples with TabPFN...")
         start_time = time.time()
 
@@ -157,6 +187,12 @@ class TabPFNWrapper(BaseModelWrapper):
         probabilities : np.ndarray, shape (n_samples, n_classes)
             Class probabilities
         """
+        if getattr(self, 'truncated_features_', False) and X.shape[1] > 100:
+            if isinstance(X, pd.DataFrame):
+                X = X.iloc[:, :100]
+            else:
+                X = X[:, :100]
+
         return self.model.predict_proba(X)
 
     def get_params(self, deep: bool = True) -> dict:

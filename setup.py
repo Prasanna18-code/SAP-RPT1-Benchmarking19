@@ -30,6 +30,13 @@ setup(
             "python-dotenv>=1.0.1",
             "sap-rpt-oss @ git+https://github.com/SAP-samples/sap-rpt-1-oss.git@v1.1.2",
         ],
+        "baselines": [
+            "xgboost>=2.0.3",
+            "catboost>=1.2.3",
+            "lightgbm>=4.3.0",
+            "autogluon.tabular[all]>=1.0.0",
+            "tabpfn>=0.1.9",
+        ],
     },
     python_requires=">=3.11",
 )

@@ -140,9 +140,10 @@ class TabICLWrapper(BaseModelWrapper):
             # In actual TabICL, this would use the language model with in-context examples
             logger.warning("Using placeholder predictions. Integrate actual TabICL model.")
 
-            # Fallback: use simple heuristic or return zeros
+            # Fallback: predict the majority class for classification to ensure valid type
             if self.task_type == 'classification':
-                predictions = np.zeros(len(X), dtype=int)
+                majority_class = self.y_train_.mode()[0]
+                predictions = np.full(len(X), majority_class)
             else:
                 predictions = np.zeros(len(X))
 

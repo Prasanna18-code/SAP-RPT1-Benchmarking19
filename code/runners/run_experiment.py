@@ -65,7 +65,16 @@ def get_model(model_name: str, task_type: str, config: dict):
         raise ValueError(f"Unknown model: {model_name}. Choose from {list(model_map.keys())}")
 
     model_class = model_map[model_name]
-    model = model_class(task_type=task_type, **config.get('model_params', {}))
+    
+    # Get specific parameters for this model
+    model_config_key = model_name.replace('-', '_')
+    # Special handling for size variants like sap-rpt1-small -> sap_rpt1
+    if model_name.startswith('sap-rpt1-') and model_name not in ['sap-rpt1-hf']:
+        model_config_key = 'sap_rpt1'
+
+    model_params = config.get('model_params', {}).get(model_config_key, {})
+    
+    model = model_class(task_type=task_type, **model_params)
 
     logger.info(f"Initialized {model_name} for {task_type}")
 
@@ -196,7 +205,7 @@ def run_single_experiment(
         with open(output_file, 'w') as f:
             json.dump(summary, f, indent=2)
 
-        logger.info(f"\n✅ Results saved to {output_file}")
+        logger.info(f"\n[SUCCESS] Results saved to {output_file}")
 
         # Print summary
         primary_metric = 'roc_auc' if task_type == 'classification' else 'r2'
@@ -248,4 +257,4 @@ if __name__ == "__main__":
         output_dir=args.output_dir
     )
 
-    print("\n✅ Experiment complete!")
+    print("\n[SUCCESS] Experiment complete!")

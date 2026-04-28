@@ -59,6 +59,8 @@ class XGBoostWrapper(BaseModelWrapper):
 
     def fit(self, X: Union[pd.DataFrame, np.ndarray], y: Union[pd.Series, np.ndarray]) -> 'XGBoostWrapper':
         """Fit XGBoost model."""
+        from sklearn.preprocessing import LabelEncoder
+        self._label_encoder = None
         self._validate_input(X, y)
 
         logger.info(f"Fitting XGBoost on {X.shape[0]} samples...")
@@ -84,7 +86,12 @@ class XGBoostWrapper(BaseModelWrapper):
                     **self.kwargs
                 )
 
-            self.model.fit(X, y)
+            if self.task_type == 'classification':
+                self._label_encoder = LabelEncoder()
+                y_encoded = self._label_encoder.fit_transform(y)
+                self.model.fit(X, y_encoded)
+            else:
+                self.model.fit(X, y)
 
             self.is_fitted = True
             self.fit_time = time.time() - start_time
@@ -108,6 +115,8 @@ class XGBoostWrapper(BaseModelWrapper):
 
         start_time = time.time()
         predictions = self.model.predict(X)
+        if self.task_type == 'classification' and self._label_encoder is not None:
+            predictions = self._label_encoder.inverse_transform(predictions)
         self.predict_time = time.time() - start_time
 
         return predictions

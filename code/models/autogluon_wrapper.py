@@ -114,8 +114,7 @@ class AutoGluonWrapper(BaseModelWrapper):
             self.model.fit(
                 train_data=train_data,
                 time_limit=self.time_limit,
-                presets=self.preset,
-                random_state=self.random_state
+                presets=self.preset
             )
 
             self.is_fitted = True

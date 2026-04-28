@@ -260,15 +260,15 @@ def main():
     model_list = args.model_filter or get_model_list(models_config)
 
     if not dataset_list:
-        print("❌ No datasets found in the datasets directory.")
+        print("[ERROR] No datasets found in the datasets directory.")
         sys.exit(1)
 
     if not model_list:
-        print("❌ No models enabled in config. Check config/models.yaml")
+        print("[ERROR] No models enabled in config. Check config/models.yaml")
         sys.exit(1)
 
-    print(f"\n📊 Datasets ({len(dataset_list)}): {dataset_list[:5]}{'...' if len(dataset_list) > 5 else ''}")
-    print(f"🤖 Models ({len(model_list)}): {model_list}")
+    print(f"\n[INFO] Datasets ({len(dataset_list)}): {dataset_list[:5]}{'...' if len(dataset_list) > 5 else ''}")
+    print(f"[INFO] Models ({len(model_list)}): {model_list}")
 
     # Add dataset_dir to config for run_experiment to use
     experiment_config['dataset_dir'] = args.dataset_dir if args.dataset_dir else str(Path(__file__).parent.parent.parent / 'datasets')
@@ -282,7 +282,7 @@ def main():
         skip_existing=not args.no_skip
     )
 
-    print(f"\n✅ Batch complete! {summary['completed']} succeeded, {summary['failed']} failed")
+    print(f"\n[SUCCESS] Batch complete! {summary['completed']} succeeded, {summary['failed']} failed")
 
 
 if __name__ == "__main__":

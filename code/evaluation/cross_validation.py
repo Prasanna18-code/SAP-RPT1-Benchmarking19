@@ -11,12 +11,39 @@ Date: November 2025
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold, KFold
+from sklearn.preprocessing import LabelEncoder
 from typing import List, Dict
 import logging
 
 from .metrics import calculate_classification_metrics, calculate_regression_metrics
 
 logger = logging.getLogger(__name__)
+
+
+def _encode_categorical_columns(X_train, X_val):
+    """
+    Label-encode object/categorical columns. Fitted on X_train,
+    applied to both X_train and X_val. Unknown categories in X_val
+    are mapped to -1.
+    """
+    X_train = X_train.copy()
+    X_val = X_val.copy()
+
+    cat_cols = X_train.select_dtypes(include=['object', 'category']).columns
+    if len(cat_cols) == 0:
+        return X_train, X_val
+
+    logger.info(f"  Encoding {len(cat_cols)} categorical columns: {list(cat_cols[:5])}{'...' if len(cat_cols) > 5 else ''}")
+
+    for col in cat_cols:
+        le = LabelEncoder()
+        # Fit on combined unique values from train (+ handle unseen in val)
+        combined = pd.concat([X_train[col], X_val[col]], axis=0).astype(str)
+        le.fit(combined)
+        X_train[col] = le.transform(X_train[col].astype(str))
+        X_val[col] = le.transform(X_val[col].astype(str))
+
+    return X_train, X_val
 
 
 def run_cross_validation(
@@ -66,6 +93,9 @@ def run_cross_validation(
         # Split data
         X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
         y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+
+        # Auto-encode categorical columns so tree models can handle them
+        X_train, X_val = _encode_categorical_columns(X_train, X_val)
 
         # Fit model
         model.fit(X_train, y_train)
